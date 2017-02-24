@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+<head>
+  <title>Dropbox JavaScript SDK</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/__build__/Dropbox-sdk.min.js"></script>
+  <script src="/utils.js"></script>
+</head>
+<body>
+  <!-- Example layout boilerplate -->
+  <header class="page-header">
+    <div class="container">
+      <nav>
+        <a href="/">
+          <h1>
+            <img src="https://cfl.dropboxstatic.com/static/images/brand/logotype_white-vflRG5Zd8.svg" class="logo" />
+            JavaScript SDK Examples
+          </h1>
+        </a>
+        <a href="https://github.com/dropbox/dropbox-sdk-js/tree/master/examples" class="view-source">View Source</a>
+      </nav>
+      <h2 class="code">
+        <a href="/">examples</a> / authentication
+      </h2>
+    </div>
+  </header>
+
+  <div class="container main">
+    <div id="pre-auth-section" style="display:none;">
+      <p>This example takes the user through Dropbox's API OAuth flow using <code>Dropbox.getAuthenticationUrl()</code> method [<a href="http://dropbox.github.io/dropbox-sdk-js/Dropbox.html#getAuthenticationUrl">docs</a>] and then uses the generated access token to list the contents of their root directory.</p>
+      <a href="" id="authlink" class="button">Authenticate</a>
+      <p class="info">Once authenticated, it will use the access token to list the files in your root directory.</p>
+    </div>
+
+    <div id="authed-section" style="display:none;">
+      <p>You have successfully authenticated. Below are the contents of your root directory. They were fetched using the SDK and access token.</p>
+      <ul id="files"></ul>
+    </div>
+  </div>
+
+  <script>
+    var CLIENT_ID = 'zt2bzf8nhp1mwq2';
+
+    // Parses the url and gets the access token if it is in the urls hash
+    function getAccessTokenFromUrl() {
+     return utils.parseQueryString(window.location.hash).access_token;
+    }
+
+    // If the user was just redirected from authenticating, the urls hash will
+    // contain the access token.
+    function isAuthenticated() {
+      return !!getAccessTokenFromUrl();
+    }
+
+    // Render a list of items to #files
+    function renderItems(items) {
+      var filesContainer = document.getElementById('files');
+      items.forEach(function(item) {
+        var li = document.createElement('li');
+        li.innerHTML = item.name;
+        filesContainer.appendChild(li);
+      });
+    }
+
+    // This example keeps both the authenticate and non-authenticated setions
+    // in the DOM and uses this function to show/hide the correct section.
+    function showPageSection(elementId) {
+      document.getElementById(elementId).style.display = 'block';
+    }
+
+    var RateTest = function() {
+      // runtime property
+      this.startTime = 0;
+      this.endTime = 0;
+      this.runCount;
+      this.failCount;
+      this.retryCount;
+
+      // static property
+      this.threadCount = 6;
+      this.obeyRetry = true;
+      this.autoStopCount = 500;
+      this.autoStopTime = 10000; // in milliseconds
+    }
+
+    RateTest.prototype.Run = function(func, args) {
+      this.startTime = performance.now();
+      this.runCount = 0;
+      this.retryCount = 0;
+      this.failCount = 0;
+      activeThread = this.threadCount;
+
+      var _this = this;
+      function unitCall() {
+        _this.runCount ++;
+        func(args).then(function(response) {
+            var now = performance.now();
+            if (now < _this.startTime + _this.autoStopTime && _this.runCount < _this.autoStopCount) {
+              unitCall();
+            } else {
+              _this.endTime = now;
+              activeThread --;
+              if (activeThread === 0) {
+                _this.Report();
+              }
+            }
+          })
+          .catch(function(error) {
+            _this.failCount ++;
+            if (_this.obeyRetry) {
+              _this.retryCount ++;
+              window.setTimeout(unitCall, 1000);
+            }
+            else {
+              var end = performance.now();
+              console.log("Time:" + (end - start) + " milliseconds, Count:" + _this.runCount);
+              console.error(error);
+
+              activeThread --;
+              if (activeThread === 0) {
+                _this.Report();
+              }
+            }
+          });
+      }
+
+      for (var i = 0; i < this.threadCount; i ++) {
+        unitCall();
+      }
+    }
+
+    RateTest.prototype.Report = function() {
+      console.log("Thread Count: " + this.threadCount + " Total Time: " + (this.endTime - this.startTime) + " Run Count: " + this.runCount + " Fail Count: " + this.failCount + " Retry Count: " + this.retryCount);
+    }
+
+    if (isAuthenticated()) {
+      showPageSection('authed-section');
+
+      // Create an instance of Dropbox with the access token and use it to
+      // fetch and render the files in the users root directory.
+      var dbx = new Dropbox({ accessToken: getAccessTokenFromUrl() });
+
+      dbx.filesListFolder({path: ''})
+        .then(function(response) {
+          renderItems(response.entries);
+        })
+        .catch(function(error) {
+          console.error(error);
+        });
+
+      var test = new RateTest();
+      test.Run(dbx.filesListFolder.bind(dbx), {path: ''});
+    } else {
+      showPageSection('pre-auth-section');
+
+      // Set the login anchors href using dbx.getAuthenticationUrl()
+      var dbx = new Dropbox({ clientId: CLIENT_ID });
+      var authUrl = dbx.getAuthenticationUrl('http://localhost:8080/ratetest');
+      document.getElementById('authlink').href = authUrl;
+    }
+  </script>
+</body>
+</html>
