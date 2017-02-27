@@ -1,4 +1,5 @@
-# Single V8 instance.
+Single V8 instance.
+-------------------
 - Single User
   Thread Count: 8 Total Time: 20578 Run Count: 213 Fail Count: 0 Retry Count: 0
 - Two User
@@ -14,7 +15,8 @@
 2: 4 cps
 4: 2.5 cps
 
-# Two V8 instance.
+Two V8 instance.
+----------------
 - Single User
   VM0: Thread Count: 8 Total Time: 20578 Run Count: 178 Fail Count: 0 Retry Count: 0
   VM1: Thread Count: 8 Total Time: 20644 Run Count: 183 Fail Count: 0 Retry Count: 0
@@ -37,7 +39,8 @@
 2: 9 cps
 4: 3 cps
 
-# Four V8 instance.
+Four V8 instance.
+-----------------
 - One User
   VM0: Thread Count: 8 Total Time: 24867 Run Count: 54 Fail Count: 0 Retry Count: 0
   VM1: Thread Count: 8 Total Time: 24194 Run Count: 48 Fail Count: 0 Retry Count: 0

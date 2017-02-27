@@ -161,17 +161,8 @@
       }
     }
 
-    function multiUserTest(userCount) {
-      var tokens = [
-        '2OwwwUvof7AAAAAAAAAAB62Jrwxa9w86lYyNIYzqnibUzkPXiWM5wZ8i7UBLvx2S', // 'test0@owtware.com'
-        '5C_DZ2SizVAAAAAAAAAAB4T2u4yMi2BSNo2o9H7lWa_xtW_-FRowr31ISoNfXQrz', // 
-        'Y96eppMHv3AAAAAAAAAAB0TGqvvXPfhkSLhh0KBXoLXjfoVcHhdiqR7qgIRfqxnI', 
-        'koLTbhVP52AAAAAAAAAAB9M9o3pRb8ZDo7oSJL26K8GwW5czPWgaUqwi0V0yioxc'
-      ];
-
-      var _c = Math.min(userCount, tokens.length);
-
-      for (var i = 0; i < _c; i ++) {
+    function multiUserTest(tokens) {
+      for (var i = 0; i < tokens.length; i ++) {
         var token = tokens[i];
         console.log(i, token);
 
@@ -182,8 +173,38 @@
         test.Run(dbx.filesListFolder.bind(dbx), {path: ''});
       }
     }
-    
-    multiUserTest(1);
+
+		function getParameterByName(name, url) {
+			if (!url) {
+				url = window.location.href;
+			}
+			name = name.replace(/[\[\]]/g, "\\$&");
+			var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+			results = regex.exec(url);
+			if (!results) return null;
+			if (!results[2]) return '';
+			return decodeURIComponent(results[2].replace(/\+/g, " "));
+		}
+
+    var tokens = [
+      '2OwwwUvof7AAAAAAAAAAB62Jrwxa9w86lYyNIYzqnibUzkPXiWM5wZ8i7UBLvx2S', // 'test0@owtware.com'
+      '5C_DZ2SizVAAAAAAAAAAB4T2u4yMi2BSNo2o9H7lWa_xtW_-FRowr31ISoNfXQrz', // 'test1@owtware.com'
+      'Y96eppMHv3AAAAAAAAAAB0TGqvvXPfhkSLhh0KBXoLXjfoVcHhdiqR7qgIRfqxnI', // 'test2@owtware.com'
+      'koLTbhVP52AAAAAAAAAAB9M9o3pRb8ZDo7oSJL26K8GwW5czPWgaUqwi0V0yioxc'  // 'test3@owtware.com'
+    ];
+
+		var userno = getParameterByName('userno');
+    if (userno) {
+      if (userno < 0 || userno >= tokens.length) {
+        console.error("invalid userno");
+      } else {
+        var _t = [];
+        _t.push(tokens[userno]);
+        multiUserTest(_t);
+      }
+    } else {
+      multiUserTest(tokens);
+    }
   </script>
 </body>
 </html>
